@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoTrack — Personal Carbon Footprint Manager</title>
+    <meta name="description" content="EcoTrack helps you calculate, monitor, and reduce your personal carbon footprint through smart insights, challenges, and gamification.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- ── AUTH OVERLAY ─────────────────────────────────────────────────────── -->
+<div id="auth-overlay" class="auth-overlay">
+    <div class="auth-bg-anim">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="auth-card">
+        <div class="auth-logo">
+            <i class="fa-solid fa-leaf"></i>
+            <h1>EcoTrack</h1>
+            <p>Your Personal Carbon Intelligence Platform</p>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form" class="auth-form">
+            <h2>Welcome Back</h2>
+            <div class="form-group">
+                <label><i class="fa-solid fa-envelope"></i> Email</label>
+                <input type="email" id="login-email" placeholder="you@email.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-lock"></i> Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <div id="login-error" class="auth-error hidden"></div>
+            <button class="btn-primary full-width" id="btn-login">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+            </button>
+            <p class="auth-switch">Don't have an account? <a href="#" id="go-register">Create one free →</a></p>
+            <button class="btn-ghost full-width" id="btn-demo">
+                <i class="fa-solid fa-play"></i> Try Demo Mode
+            </button>
+        </div>
+
+        <!-- Register Form -->
+        <div id="register-form" class="auth-form hidden">
+            <h2>Join EcoTrack</h2>
+            <div class="form-group">
+                <label><i class="fa-solid fa-user"></i> Full Name</label>
+                <input type="text" id="reg-name" placeholder="Alex Green" autocomplete="name">
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-envelope"></i> Email</label>
+                <input type="email" id="reg-email" placeholder="you@email.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-lock"></i> Password</label>
+                <input type="password" id="reg-password" placeholder="Create a strong password" autocomplete="new-password">
+            </div>
+            <div id="reg-error" class="auth-error hidden"></div>
+            <button class="btn-primary full-width" id="btn-register">
+                <i class="fa-solid fa-seedling"></i> Start My Journey
+            </button>
+            <p class="auth-switch">Already have an account? <a href="#" id="go-login">Sign in →</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- ── MAIN APP ──────────────────────────────────────────────────────────── -->
+<div id="app" class="app-container hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <i class="fa-solid fa-leaf"></i>
+                <span>Eco<strong>Track</strong></span>
+            </div>
+            <button class="sidebar-toggle" id="sidebar-toggle">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+
+        <div class="user-chip" id="sidebar-user">
+            <div class="avatar" id="sidebar-avatar">E</div>
+            <div class="user-info">
+                <span class="user-name" id="sidebar-name">Loading…</span>
+                <span class="user-level" id="sidebar-level">Level 1</span>
+            </div>
+        </div>
+
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active" data-tab="dashboard" id="nav-dashboard">
+                <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="calculator" id="nav-calculator">
+                <i class="fa-solid fa-calculator"></i><span>Calculator</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="logger" id="nav-logger">
+                <i class="fa-solid fa-pen-to-square"></i><span>Action Logger</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="challenges" id="nav-challenges">
+                <i class="fa-solid fa-trophy"></i><span>Challenges</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="offsets" id="nav-offsets">
+                <i class="fa-solid fa-tree"></i><span>Offset Carbon</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="trees" id="nav-trees">
+                <i class="fa-solid fa-leaf"></i><span>Trees & CO₂</span>
+            </a>
+            <a href="#" class="nav-item" data-tab="education" id="nav-education">
+                <i class="fa-solid fa-graduation-cap"></i><span>Learn</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-points">
+            <div class="points-label">Eco Points</div>
+            <div class="points-value" id="sidebar-points">0</div>
+            <div class="points-bar-wrap">
+                <div class="points-bar" id="sidebar-points-bar" style="width:0%"></div>
+            </div>
+        </div>
+
+        <button class="btn-logout" id="btn-logout">
+            <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+        </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 class="page-title" id="page-title">Dashboard</h1>
+                <span class="page-subtitle" id="page-subtitle">Your sustainability command center</span>
+            </div>
+            <div class="topbar-right">
+                <div class="co2-badge" id="topbar-co2">
+                    <i class="fa-solid fa-cloud"></i>
+                    <span id="topbar-co2-value">– kg</span>
+                    <small>this month</small>
+                </div>
+                <button class="btn-icon" id="btn-log-quick" title="Quick Log">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ── DASHBOARD TAB ── -->
+        <section id="tab-dashboard" class="tab-content active">
+            <!-- Stats Row -->
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-icon"><i class="fa-solid fa-cloud-bolt"></i></div>
+                    <div class="stat-body">
+                        <div class="stat-value" id="stat-monthly">0 <small>kg CO₂</small></div>
+                        <div class="stat-label">This Month's Footprint</div>
+                    </div>
+                    <div class="stat-trend" id="stat-monthly-trend"></div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-icon"><i class="fa-solid fa-leaf"></i></div>
+                    <div class="stat-body">
+                        <div class="stat-value" id="stat-saved">0 <small>kg CO₂</small></div>
+                        <div class="stat-label">CO₂ Saved vs. Baseline</div>
+                    </div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon"><i class="fa-solid fa-tree"></i></div>
+                    <div class="stat-body">
+                        <div class="stat-value" id="stat-trees">0 <small>trees</small></div>
+                        <div class="stat-label">Trees Equivalent</div>
+                    </div>
+                </div>
+                <div class="stat-card accent">
+                    <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
+                    <div class="stat-body">
+                        <div class="stat-value" id="stat-points">0 <small>pts</small></div>
+                        <div class="stat-label">Total Eco Points</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-line"></i> 7-Day Emissions Trend</h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="trend-chart"></canvas>
+                    </div>
+                </div>
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Emissions by Category</h3>
+                    </div>
+                    <div class="chart-wrapper donut-wrap">
+                        <canvas id="category-chart"></canvas>
+                        <div class="donut-center">
+                            <span id="donut-total">0</span>
+                            <small>kg CO₂</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div class="bottom-row">
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Activity</h3>
+                    </div>
+                    <div id="recent-activity" class="activity-list">
+                        <div class="empty-state"><i class="fa-solid fa-seedling"></i><p>No activity yet. Start logging!</p></div>
+                    </div>
+                </div>
+
+                <!-- Badges -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-medal"></i> My Badges</h3>
+                    </div>
+                    <div id="badges-grid" class="badges-grid">
+                        <div class="empty-state"><i class="fa-solid fa-award"></i><p>Complete actions to earn badges!</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Challenges Banner -->
+            <div id="active-challenges-strip" class="active-challenges-strip hidden">
+                <h3><i class="fa-solid fa-fire"></i> Active Challenges</h3>
+                <div id="active-challenges-list" class="strip-list"></div>
+            </div>
+        </section>
+
+        <!-- ── CALCULATOR TAB ── -->
+        <section id="tab-calculator" class="tab-content">
+            <div class="calculator-container">
+                <div class="calc-progress">
+                    <div class="progress-step active" data-step="1"><span>1</span> Transport</div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step" data-step="2"><span>2</span> Energy</div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step" data-step="3"><span>3</span> Food</div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step" data-step="4"><span>4</span> Shopping</div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step" data-step="5"><span>5</span> Waste</div>
+                </div>
+
+                <!-- Step 1: Transport -->
+                <div class="calc-step" id="calc-step-1">
+                    <div class="step-hero">
+                        <div class="step-hero-icon"><i class="fa-solid fa-car"></i></div>
+                        <h2>Transportation</h2>
+                        <p>How do you typically get around each month?</p>
+                    </div>
+                    <div class="input-grid">
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-car"></i> Car Distance (km/month)</label>
+                            <input type="number" id="c-car-km" placeholder="e.g. 400" min="0">
+                            <div class="input-hint">Average monthly km by car</div>
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-gas-pump"></i> Fuel Type</label>
+                            <select id="c-fuel-type">
+                                <option value="petrol">Petrol / Gasoline</option>
+                                <option value="diesel">Diesel</option>
+                                <option value="electric">Electric (EV)</option>
+                            </select>
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-bus"></i> Bus (km/month)</label>
+                            <input type="number" id="c-bus-km" placeholder="e.g. 100" min="0">
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-train"></i> Train (km/month)</label>
+                            <input type="number" id="c-train-km" placeholder="e.g. 50" min="0">
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-plane"></i> Domestic Flights (km/yr)</label>
+                            <input type="number" id="c-flight-dom" placeholder="e.g. 2000" min="0">
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-plane-departure"></i> International Flights (km/yr)</label>
+                            <input type="number" id="c-flight-int" placeholder="e.g. 5000" min="0">
+                        </div>
+                    </div>
+                    <div class="step-nav">
+                        <div></div>
+                        <button class="btn-primary" onclick="calcNextStep(2)">Next: Energy <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Energy -->
+                <div class="calc-step hidden" id="calc-step-2">
+                    <div class="step-hero">
+                        <div class="step-hero-icon"><i class="fa-solid fa-bolt"></i></div>
+                        <h2>Home Energy</h2>
+                        <p>Tell us about your household energy usage each month.</p>
+                    </div>
+                    <div class="input-grid">
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-plug"></i> Electricity (kWh/month)</label>
+                            <input type="number" id="c-elec-kwh" placeholder="e.g. 300" min="0">
+                            <div class="input-hint">Check your energy bill</div>
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-fire-flame-curved"></i> Natural Gas (kWh/month)</label>
+                            <input type="number" id="c-gas-kwh" placeholder="e.g. 150" min="0">
+                        </div>
+                    </div>
+                    <div class="step-nav">
+                        <button class="btn-ghost" onclick="calcNextStep(1)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button class="btn-primary" onclick="calcNextStep(3)">Next: Food <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Food -->
+                <div class="calc-step hidden" id="calc-step-3">
+                    <div class="step-hero">
+                        <div class="step-hero-icon"><i class="fa-solid fa-utensils"></i></div>
+                        <h2>Food & Diet</h2>
+                        <p>Estimate your meal types per week (on average).</p>
+                    </div>
+                    <div class="input-grid">
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-drumstick-bite"></i> Meat-based meals / week</label>
+                            <input type="number" id="c-meat-meals" placeholder="e.g. 5" min="0" max="21">
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-egg"></i> Vegetarian meals / week</label>
+                            <input type="number" id="c-veg-meals" placeholder="e.g. 10" min="0" max="21">
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-seedling"></i> Vegan meals / week</label>
+                            <input type="number" id="c-vegan-meals" placeholder="e.g. 6" min="0" max="21">
+                        </div>
+                    </div>
+                    <div class="step-nav">
+                        <button class="btn-ghost" onclick="calcNextStep(2)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button class="btn-primary" onclick="calcNextStep(4)">Next: Shopping <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Shopping -->
+                <div class="calc-step hidden" id="calc-step-4">
+                    <div class="step-hero">
+                        <div class="step-hero-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+                        <h2>Shopping & Lifestyle</h2>
+                        <p>How much do you shop each month?</p>
+                    </div>
+                    <div class="input-grid">
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-shirt"></i> Clothing items / month</label>
+                            <input type="number" id="c-clothing" placeholder="e.g. 2" min="0">
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-laptop"></i> Electronics purchased / month</label>
+                            <input type="number" id="c-electronics" placeholder="e.g. 0" min="0">
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-box"></i> Online orders / month</label>
+                            <input type="number" id="c-orders" placeholder="e.g. 5" min="0">
+                        </div>
+                    </div>
+                    <div class="step-nav">
+                        <button class="btn-ghost" onclick="calcNextStep(3)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button class="btn-primary" onclick="calcNextStep(5)">Next: Waste <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Step 5: Waste -->
+                <div class="calc-step hidden" id="calc-step-5">
+                    <div class="step-hero">
+                        <div class="step-hero-icon"><i class="fa-solid fa-recycle"></i></div>
+                        <h2>Waste Generation</h2>
+                        <p>Estimate your weekly waste output in kilograms.</p>
+                    </div>
+                    <div class="input-grid">
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-trash"></i> General waste (kg/week)</label>
+                            <input type="number" id="c-waste-gen" placeholder="e.g. 5" min="0">
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-recycle"></i> Recycled (kg/week)</label>
+                            <input type="number" id="c-waste-rec" placeholder="e.g. 2" min="0">
+                        </div>
+                        <div class="input-card">
+                            <label><i class="fa-solid fa-seedling"></i> Composted (kg/week)</label>
+                            <input type="number" id="c-waste-comp" placeholder="e.g. 1" min="0">
+                        </div>
+                    </div>
+                    <div class="save-baseline-row">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="c-save-baseline" checked>
+                            <span class="toggle-switch"></span>
+                            Save as my baseline footprint
+                        </label>
+                    </div>
+                    <div class="step-nav">
+                        <button class="btn-ghost" onclick="calcNextStep(4)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button class="btn-primary" id="btn-calculate">
+                            <i class="fa-solid fa-calculator"></i> Calculate My Footprint
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Result -->
+                <div class="calc-step hidden" id="calc-result">
+                    <div class="result-hero">
+                        <div class="result-ring" id="result-ring">
+                            <svg viewBox="0 0 120 120">
+                                <circle cx="60" cy="60" r="54" fill="none" stroke="#1e293b" stroke-width="12"/>
+                                <circle id="result-arc" cx="60" cy="60" r="54" fill="none" stroke="url(#rg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="339.3" transform="rotate(-90 60 60)"/>
+                                <defs>
+                                    <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="#22d3a5"/>
+                                        <stop offset="100%" stop-color="#3b82f6"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <div class="result-center">
+                                <span id="result-total">0</span>
+                                <small>kg CO₂/mo</small>
+                            </div>
+                        </div>
+                        <div class="result-meta">
+                            <h2>Your Monthly Carbon Footprint</h2>
+                            <p id="result-annual-text">Annually: <strong id="result-annual">0 kg</strong></p>
+                            <div class="result-rating" id="result-rating"></div>
+                        </div>
+                    </div>
+
+                    <div class="result-breakdown">
+                        <h3>Breakdown by Category</h3>
+                        <div id="result-bars" class="result-bars"></div>
+                    </div>
+
+                    <div class="result-recommendations">
+                        <h3><i class="fa-solid fa-lightbulb"></i> Personalised Recommendations</h3>
+                        <div id="result-recs" class="recs-grid"></div>
+                    </div>
+
+                    <div class="step-nav">
+                        <button class="btn-ghost" onclick="calcNextStep(5)"><i class="fa-solid fa-arrow-left"></i> Recalculate</button>
+                        <button class="btn-primary" onclick="switchTab('challenges')">
+                            <i class="fa-solid fa-trophy"></i> View My Challenges
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── ACTION LOGGER TAB ── -->
+        <section id="tab-logger" class="tab-content">
+            <div class="logger-container">
+                <div class="logger-header">
+                    <h2>Log a Daily Action</h2>
+                    <p>Track individual activities to build your monthly footprint.</p>
+                </div>
+                <div class="logger-form card">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-tags"></i> Category</label>
+                            <select id="log-category" onchange="updateLogActivities()">
+                                <option value="transport">🚗 Transport</option>
+                                <option value="energy">⚡ Energy</option>
+                                <option value="food">🍽️ Food</option>
+                                <option value="shopping">🛍️ Shopping</option>
+                                <option value="waste">♻️ Waste</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-list"></i> Activity</label>
+                            <select id="log-activity"></select>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-hashtag"></i> Quantity</label>
+                            <input type="number" id="log-quantity" placeholder="e.g. 10" min="0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fa-solid fa-ruler"></i> Unit</label>
+                            <input type="text" id="log-unit" placeholder="km, kWh, kg…" readonly>
+                        </div>
+                    </div>
+                    <div class="logger-preview" id="logger-preview">
+                        <i class="fa-solid fa-cloud"></i>
+                        <span>Enter quantity to see estimated CO₂</span>
+                    </div>
+                    <button class="btn-primary" id="btn-log-activity">
+                        <i class="fa-solid fa-circle-plus"></i> Log This Activity
+                    </button>
+                </div>
+
+                <div class="card" style="margin-top:1.5rem;">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-history"></i> My Activity Log</h3>
+                        <span class="badge-pill" id="log-count-badge">0 entries</span>
+                    </div>
+                    <div id="full-activity-log" class="activity-list full-log">
+                        <div class="empty-state"><i class="fa-solid fa-seedling"></i><p>No logs yet. Start tracking above!</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── CHALLENGES TAB ── -->
+        <section id="tab-challenges" class="tab-content">
+            <div class="challenges-header">
+                <h2>Sustainability Challenges</h2>
+                <p>Join a challenge, build green habits, earn points and badges.</p>
+            </div>
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="transport">🚗 Transport</button>
+                <button class="filter-btn" data-filter="food">🍽️ Food</button>
+                <button class="filter-btn" data-filter="energy">⚡ Energy</button>
+                <button class="filter-btn" data-filter="waste">♻️ Waste</button>
+                <button class="filter-btn" data-filter="shopping">🛍️ Shopping</button>
+            </div>
+            <div id="challenges-grid" class="challenges-grid">
+                <div class="empty-state"><i class="fa-solid fa-trophy"></i><p>Loading challenges…</p></div>
+            </div>
+        </section>
+
+        <!-- ── OFFSETS TAB ── -->
+        <section id="tab-offsets" class="tab-content">
+            <div class="offsets-header">
+                <h2>Carbon Offset Projects</h2>
+                <p>Compensate for unavoidable emissions by supporting verified green projects.</p>
+            </div>
+            <div id="offsets-grid" class="offsets-grid">
+                <div class="empty-state"><i class="fa-solid fa-tree"></i><p>Loading offset projects…</p></div>
+            </div>
+        </section>
+
+        <!-- ── EDUCATION TAB ── -->
+        <section id="tab-education" class="tab-content">
+            <div class="education-header">
+                <h2>Climate Education Hub</h2>
+                <p>Learn how your choices shape the planet's future.</p>
+            </div>
+            <div id="education-grid" class="education-grid">
+                <div class="empty-state"><i class="fa-solid fa-book-open"></i><p>Loading articles…</p></div>
+            </div>
+        </section>
+
+        <!-- ── TREES TAB ── -->
+        <section id="tab-trees" class="tab-content">
+            <div class="trees-header">
+                <h2>Tree CO₂ Absorption Guide</h2>
+                <p>Discover which trees are the most effective at capturing carbon and reducing your footprint.</p>
+            </div>
+            <div id="trees-grid" class="trees-grid">
+                <div class="empty-state"><i class="fa-solid fa-tree"></i><p>Loading tree data…</p></div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast hidden">
+    <i class="fa-solid fa-circle-check toast-icon"></i>
+    <span id="toast-message">Action logged!</span>
+</div>
+
+<!-- Quick Log Modal -->
+<div id="quick-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-circle-plus"></i> Quick Log</h3>
+            <button class="btn-icon" id="close-quick-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="form-group">
+            <label>Category</label>
+            <select id="qm-category" onchange="updateQuickModalActivities()">
+                <option value="transport">🚗 Transport</option>
+                <option value="energy">⚡ Energy</option>
+                <option value="food">🍽️ Food</option>
+                <option value="shopping">🛍️ Shopping</option>
+                <option value="waste">♻️ Waste</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Activity</label>
+            <select id="qm-activity"></select>
+        </div>
+        <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" id="qm-quantity" placeholder="e.g. 10" min="0" step="0.1">
+        </div>
+        <button class="btn-primary full-width" id="btn-qm-log">
+            <i class="fa-solid fa-circle-plus"></i> Log Activity
+        </button>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

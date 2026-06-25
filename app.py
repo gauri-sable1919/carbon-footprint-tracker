@@ -491,8 +491,11 @@ def get_trees():
 
 # ─── App Entry Point ───────────────────────────────────────────────────────────
 
+# Initialize DB when app is imported (works with gunicorn on Cloud Run)
+with app.app_context():
+    db.create_all()
+    seed_data()
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        seed_data()
     app.run(debug=True, port=5000)
+
